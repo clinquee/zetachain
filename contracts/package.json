@@ -2,5 +2,11 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.0.0",
     "hardhat": "^2.25.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.3.0",
+    "@zetachain/toolkit": "^1.0.0-athens3",
+    "dotenv": "^17.2.0",
+    "ethers": "^6.15.0"
   }
 }

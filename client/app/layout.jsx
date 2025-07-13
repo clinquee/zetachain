@@ -1,6 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import Aurora from "./components/Aurora";
+import Providers from '../providers/RainbowKitProvider';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,7 +30,10 @@ export default function RootLayout({ children }) {
         <div className="fixed inset-0 -z-10 w-full h-full">
           <Aurora colorStops={["#3A29FF", "#FF94B4", "#FF3232"]} blend={0.5} amplitude={1.0} speed={0.5} />
         </div>
-        {children}
+        
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

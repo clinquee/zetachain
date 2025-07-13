@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Zap, Menu, X, Wallet } from 'lucide-react';
+import { Zap, Menu, X } from 'lucide-react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -44,12 +45,96 @@ export default function Navigation() {
             <a href="#demo" className="text-gray-200 hover:text-white transition-colors">
               Demo
             </a>
-            <button className="bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300">
-              <div className="flex items-center space-x-2">
-                <Wallet className="w-4 h-4" />
-                <span>Connect Wallet</span>
-              </div>
-            </button>
+            
+            {/* RainbowKit Connect Button */}
+            <ConnectButton.Custom>
+              {({
+                account,
+                chain,
+                openAccountModal,
+                openChainModal,
+                openConnectModal,
+                authenticationStatus,
+                mounted,
+              }) => {
+                const ready = mounted && authenticationStatus !== 'loading';
+                const connected =
+                  ready &&
+                  account &&
+                  chain &&
+                  (!authenticationStatus ||
+                    authenticationStatus === 'authenticated');
+
+                return (
+                  <div
+                    {...(!ready && {
+                      'aria-hidden': true,
+                      'style': {
+                        opacity: 0,
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                      },
+                    })}
+                  >
+                    {(() => {
+                      if (!connected) {
+                        return (
+                          <button 
+                            onClick={openConnectModal} 
+                            className="bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300"
+                          >
+                            Connect Wallet
+                          </button>
+                        );
+                      }
+
+                      if (chain.unsupported) {
+                        return (
+                          <button 
+                            onClick={openChainModal} 
+                            className="bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 transition-all duration-300"
+                          >
+                            Wrong network
+                          </button>
+                        );
+                      }
+
+                      return (
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={openChainModal}
+                            className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-all duration-300 flex items-center space-x-2"
+                          >
+                            {chain.hasIcon && (
+                              <div className="w-4 h-4">
+                                {chain.iconUrl && (
+                                  <img
+                                    alt={chain.name ?? 'Chain icon'}
+                                    src={chain.iconUrl}
+                                    className="w-4 h-4"
+                                  />
+                                )}
+                              </div>
+                            )}
+                            <span>{chain.name}</span>
+                          </button>
+
+                          <button 
+                            onClick={openAccountModal} 
+                            className="bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300"
+                          >
+                            {account.displayName}
+                            {account.displayBalance
+                              ? ` (${account.displayBalance})`
+                              : ''}
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                );
+              }}
+            </ConnectButton.Custom>
           </div>
 
           {/* Mobile Menu Button */}
@@ -86,16 +171,15 @@ export default function Navigation() {
               >
                 Demo
               </a>
-              <button className="mx-6 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white px-6 py-3 rounded-xl transition-all duration-300">
-                <div className="flex items-center space-x-2">
-                  <Wallet className="w-4 h-4" />
-                  <span>Connect Wallet</span>
-                </div>
-              </button>
+              
+              {/* Mobile Connect Button */}
+              <div className="px-6">
+                <ConnectButton />
+              </div>
             </div>
           </div>
         )}
       </div>
     </nav>
   );
-} 
+}

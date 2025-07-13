@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("dotenv").config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -18,6 +19,12 @@ module.exports = {
     localhost: {
       url: "http://127.0.0.1:8545",
       chainId: 1337
+    },
+    zetachain_testnet: {
+      url: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
+      chainId: 7001,
+      accounts: process.env.SEPOLIA_API_KEY ? [process.env.SEPOLIA_API_KEY] : [],
+      gasPrice: 20000000000,
     }
   }
 };

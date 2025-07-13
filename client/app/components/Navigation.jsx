@@ -1,66 +1,101 @@
 'use client';
 
-import { useState } from 'react';
-import { Zap, Menu, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Zap, Menu, X, Wallet } from 'lucide-react';
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <nav className="flex items-center justify-between p-6 lg:p-8 relative z-50">
-      {/* Logo */}
-      <div className="flex items-center space-x-2">
-        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-          <Zap className="w-5 h-5 text-white" />
-        </div>
-        <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-          ZetaVault
-        </span>
-      </div>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-black/10 backdrop-blur-sm' 
+        : 'bg-transparent'
+    }`}>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 lg:h-20">
+          {/* Logo */}
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+              <Zap className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              ZetaVault
+            </span>
+          </div>
 
-      {/* Desktop Navigation */}
-      <div className="hidden md:flex items-center space-x-6">
-        <a href="#features" className="text-gray-300 hover:text-white transition-colors">
-          Features
-        </a>
-        <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">
-          How it Works
-        </a>
-        <a href="#demo" className="text-gray-300 hover:text-white transition-colors">
-          Demo
-        </a>
-        <button className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all">
-          Connect Wallet
-        </button>
-      </div>
-
-      {/* Mobile Menu Button */}
-      <button
-        className="md:hidden text-white"
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-      >
-        {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-      </button>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="absolute top-full left-0 right-0 bg-black/90 backdrop-blur-sm border-b border-white/10 md:hidden">
-          <div className="flex flex-col p-4 space-y-4">
-            <a href="#features" className="text-gray-300 hover:text-white transition-colors">
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-8">
+            <a href="#features" className="text-gray-200 hover:text-white transition-colors">
               Features
             </a>
-            <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">
+            <a href="#how-it-works" className="text-gray-200 hover:text-white transition-colors">
               How it Works
             </a>
-            <a href="#demo" className="text-gray-300 hover:text-white transition-colors">
+            <a href="#demo" className="text-gray-200 hover:text-white transition-colors">
               Demo
             </a>
-            <button className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all">
-              Connect Wallet
+            <button className="bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300">
+              <div className="flex items-center space-x-2">
+                <Wallet className="w-4 h-4" />
+                <span>Connect Wallet</span>
+              </div>
             </button>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="lg:hidden text-white hover:text-gray-300 transition-colors"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
-      )}
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="lg:hidden bg-black/20 backdrop-blur-sm">
+            <div className="flex flex-col py-6 space-y-4">
+              <a 
+                href="#features" 
+                className="text-gray-200 hover:text-white transition-colors px-6 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Features
+              </a>
+              <a 
+                href="#how-it-works" 
+                className="text-gray-200 hover:text-white transition-colors px-6 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                How it Works
+              </a>
+              <a 
+                href="#demo" 
+                className="text-gray-200 hover:text-white transition-colors px-6 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Demo
+              </a>
+              <button className="mx-6 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white px-6 py-3 rounded-xl transition-all duration-300">
+                <div className="flex items-center space-x-2">
+                  <Wallet className="w-4 h-4" />
+                  <span>Connect Wallet</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </nav>
   );
 } 

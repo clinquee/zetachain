@@ -1,63 +1,135 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowRight, Play } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowRight, Play, Sparkles, Zap, Globe } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function HeroSection() {
   const [prompt, setPrompt] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [typedText, setTypedText] = useState('');
   const router = useRouter();
+
+  const examplePrompts = [
+    "Diversify 0.5 ETH: 30% to Polygon, 40% stake ETH, 30% mint Naruto NFT",
+    "Bridge 1000 USDC from Ethereum to Polygon and provide liquidity",
+    "Swap 0.1 ETH for MATIC and stake it on Polygon",
+    "Create a portfolio: 50% ETH, 30% USDC, 20% blue-chip NFTs"
+  ];
+
+  useEffect(() => {
+    let currentIndex = 0;
+    let currentChar = 0;
+    let isDeleting = false;
+
+    const typeText = () => {
+      const currentPrompt = examplePrompts[currentIndex];
+      
+      if (isDeleting) {
+        setTypedText(currentPrompt.substring(0, currentChar - 1));
+        currentChar--;
+      } else {
+        setTypedText(currentPrompt.substring(0, currentChar + 1));
+        currentChar++;
+      }
+
+      if (!isDeleting && currentChar === currentPrompt.length) {
+        setTimeout(() => {
+          isDeleting = true;
+        }, 2000);
+      } else if (isDeleting && currentChar === 0) {
+        isDeleting = false;
+        currentIndex = (currentIndex + 1) % examplePrompts.length;
+      }
+
+      const speed = isDeleting ? 50 : 100;
+      setTimeout(typeText, speed);
+    };
+
+    typeText();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (prompt.trim()) {
-      // Store the prompt in localStorage for the execute page
       localStorage.setItem('zetavault_prompt', prompt);
-      // Navigate directly to execute page
       router.push('/execute');
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 lg:px-8 pt-20 pb-32">
-      <div className="text-center">
-        <h1 className="text-5xl lg:text-7xl font-bold mb-6">
-          <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
-            AI-Powered
+    <div className="relative min-h-screen flex items-center justify-center px-6 lg:px-8 pt-20">
+      <div className="relative z-10 max-w-6xl mx-auto text-center">
+        {/* Badge */}
+        <div className="inline-flex items-center space-x-2 text-white/80 mb-8">
+          <Sparkles className="w-4 h-4 text-purple-400" />
+          <span className="text-sm">AI-Powered Cross-Chain Execution</span>
+        </div>
+
+        {/* Main Heading */}
+        <h1 className="text-5xl lg:text-8xl font-bold mb-8 leading-tight">
+          <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+            The Future of
           </span>
           <br />
-          <span className="text-white">Cross-Chain Agent</span>
+          <span className="text-white">DeFi is Here</span>
         </h1>
         
-        <p className="text-xl lg:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+        {/* Subtitle */}
+        <p className="text-xl lg:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
           Transform natural language into executable cross-chain actions. 
           From simple transfers to complex DeFi strategies - just describe what you want.
         </p>
 
         {/* Interactive Prompt Input */}
-        <div className="max-w-2xl mx-auto mb-12">
+        <div className="max-w-3xl mx-auto mb-12">
           <form onSubmit={handleSubmit} className="relative">
             <input
               type="text"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Try: 'Diversify 0.5 ETH: 30% to Polygon, 40% stake ETH, 30% mint Naruto NFT'"
-              className="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder={typedText}
+              className="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
             />
             <button
               type="submit"
-              className="absolute right-2 top-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white p-2 rounded-xl hover:from-purple-600 hover:to-blue-600 transition-all"
+              className="absolute right-2 top-2 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white p-3 rounded-xl hover:shadow-lg transition-all duration-300"
             >
               <ArrowRight className="w-5 h-5" />
             </button>
           </form>
         </div>
 
-        {/* Demo Button */}
-        <button className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white/20 transition-all">
-          <Play className="w-5 h-5" />
-          <span>Watch Demo</span>
-        </button>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+          <button className="bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300">
+            <div className="flex items-center space-x-2">
+              <Zap className="w-5 h-5" />
+              <span className="text-lg font-semibold">Start Building</span>
+            </div>
+          </button>
+          
+          <button className="flex items-center space-x-2 text-white px-8 py-4 rounded-xl hover:bg-white/10 transition-all duration-300">
+            <Play className="w-5 h-5" />
+            <span className="text-lg font-semibold">Watch Demo</span>
+          </button>
+        </div>
+
+        {/* Stats
+        <div className="flex flex-wrap justify-center items-center space-x-8 mt-16 text-center pb-5">
+          <div className="flex items-center space-x-2">
+            <Globe className="w-5 h-5 text-purple-400" />
+            <span className="text-gray-300">10+ Chains Supported</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Zap className="w-5 h-5 text-blue-400" />
+            <span className="text-gray-300">Instant Execution</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Sparkles className="w-5 h-5 text-cyan-400" />
+            <span className="text-gray-300">AI-Powered</span>
+          </div>
+        </div> */}
       </div>
     </div>
   );

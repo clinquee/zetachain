@@ -20,9 +20,21 @@ export const chatAPI = {
             console.log("API Response status:", response.status);
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error("API Error:", errorText);
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json();
+                console.error("API Error:", errorData);
+
+                // Handle specific error types
+                if (response.status === 503) {
+                    throw new Error(
+                        "AI service is temporarily overloaded. Please try again in a few moments."
+                    );
+                } else if (response.status === 429) {
+                    throw new Error("Rate limit exceeded. Please try again later.");
+                } else {
+                    throw new Error(
+                        errorData.details || `HTTP error! status: ${response.status}`
+                    );
+                }
             }
 
             const data = await response.json();
@@ -37,7 +49,7 @@ export const chatAPI = {
                 error.message.includes("Network request failed")
             ) {
                 throw new Error(
-                    "Unable to connect to server. Please make sure the backend is running on http://localhost:5000"
+                    "Unable to connect to server. Please make sure the backend is running on http://localhost:5001"
                 );
             }
 

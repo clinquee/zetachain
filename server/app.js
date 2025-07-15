@@ -22,7 +22,15 @@ app.use(express.json());
 
 // Test route to verify server is working
 app.get("/api/health", (req, res) => {
-    res.json({ status: "OK", message: "Server is running" });
+    res.json({ 
+        status: "OK", 
+        message: "Server is running",
+        aiServices: {
+            gemini: process.env.GEMINI_API_KEY ? 'configured' : 'missing',
+            openai: process.env.OPENAI_API_KEY ? 'configured' : 'missing'
+        },
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Routes
@@ -38,6 +46,9 @@ const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/api/health`);
+    console.log(`AI Status: http://localhost:${PORT}/api/chat/status`);
+    console.log(`Gemini API: ${process.env.GEMINI_API_KEY ? '✅ Configured' : '❌ Missing'}`);
+    console.log(`OpenAI API: ${process.env.OPENAI_API_KEY ? '✅ Configured' : '❌ Missing'}`);
 });
 
 module.exports = app;

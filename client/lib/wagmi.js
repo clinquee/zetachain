@@ -6,10 +6,10 @@ import {
   injectedWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 
-// Define EVM-compatible testnets
+// Define ZetaChain testnet as primary
 const zetaChainTestnet = {
   id: 7001,
-  name: 'ZetaChain Testnet',
+  name: 'ZetaChain Athens Testnet',
   iconUrl: 'https://www.zetachain.com/favicon.ico',
   iconBackground: '#fff',
   nativeCurrency: { name: 'ZETA', symbol: 'ZETA', decimals: 18 },
@@ -33,7 +33,7 @@ const sepolia = {
   nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
     default: {
-      http: ['https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY'], // or any RPC
+      http: ['https://ethereum-sepolia.blockpi.network/v1/rpc/public'],
     },
   },
   blockExplorers: {
@@ -45,7 +45,7 @@ const sepolia = {
 const amoy = {
   id: 80002,
   name: 'Polygon Amoy Testnet',
-  nativeCurrency: { name: 'Amoy', symbol: 'POL', decimals: 18 },
+  nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
   rpcUrls: {
     default: {
       http: ['https://rpc-amoy.polygon.technology'],
@@ -56,21 +56,6 @@ const amoy = {
   },
   testnet: true,
 };
-
-// const bscTestnet = {
-//   id: 97,
-//   name: 'BSC Testnet',
-//   nativeCurrency: { name: 'tBNB', symbol: 'tBNB', decimals: 18 },
-//   rpcUrls: {
-//     default: {
-//       http: ['https://bsctestapi.terminet.io/rpc'],
-//     },
-//   },
-//   blockExplorers: {
-//     default: { name: 'BSCScan', url: 'https://testnet.bscscan.com' },
-//   },
-//   testnet: true,
-// };
 
 const baseSepolia = {
   id: 84532,
@@ -119,12 +104,11 @@ const avalancheFuji = {
 
 export const config = getDefaultConfig({
   appName: 'ZetaVault',
-  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_WALLETCONNECT_PROJECT_ID',
   chains: [
-    zetaChainTestnet,
+    zetaChainTestnet, // ZetaChain first as primary
     sepolia,
     amoy,
-    // bscTestnet,
     baseSepolia,
     arbitrumSepolia,
     avalancheFuji,

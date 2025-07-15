@@ -26,5 +26,22 @@ module.exports = {
       accounts: process.env.SEPOLIA_API_KEY ? [process.env.SEPOLIA_API_KEY] : [],
       gasPrice: 20000000000,
     }
+  },
+  etherscan: {
+    // Blockscout support for Zetachain testnet
+    customChains: [
+      {
+        network: "zetachain_testnet",
+        chainId: 7001,
+        urls: {
+          apiURL: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
+          browserURL: "https://athens.explorer.zetachain.com"
+        }
+      }
+    ],
+    apiKey: {
+      // Dummy key for ZetaChain testnet
+      zetachain_testnet: "ABC123"
+    }
   }
 };

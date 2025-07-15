@@ -181,7 +181,7 @@ const initialEdges = [
 
 export default function ExecutePage() {
     const [userPrompt, setUserPrompt] = useState("");
-    const [parsedActions, setParsedActions] = useState([]); // Initialize as empty array
+    const [parsedActions, setParsedActions] = useState([]); // Always initialize as array
     const [executionStatus, setExecutionStatus] = useState("idle");
     const [isPaused, setIsPaused] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
@@ -199,6 +199,10 @@ export default function ExecutePage() {
         const prompt = localStorage.getItem("zetavault_prompt");
         const actions = localStorage.getItem("zetavault_actions");
         
+        console.log("📥 Loading from localStorage:");
+        console.log("Prompt:", prompt);
+        console.log("Actions:", actions);
+        
         if (prompt) {
             setUserPrompt(prompt);
         }
@@ -206,40 +210,61 @@ export default function ExecutePage() {
         if (actions) {
             try {
                 const parsedActionsData = JSON.parse(actions);
-                // Ensure it's an array
+                console.log("📊 Parsed actions data:", parsedActionsData);
+                
+                // Ensure it's always an array and not undefined
                 if (Array.isArray(parsedActionsData)) {
+                    console.log(`✅ Setting ${parsedActionsData.length} actions`);
                     setParsedActions(parsedActionsData);
+                } else if (parsedActionsData && typeof parsedActionsData === 'object') {
+                    // If it's a single object, wrap in array
+                    console.log("🔧 Converting single action to array");
+                    setParsedActions([parsedActionsData]);
                 } else {
-                    console.warn("Parsed actions is not an array:", parsedActionsData);
+                    console.warn("⚠️ Invalid parsed actions format:", parsedActionsData);
                     setParsedActions([]);
                 }
             } catch (e) {
-                console.error("Error parsing stored actions:", e);
+                console.error("❌ Error parsing stored actions:", e);
                 setParsedActions([]);
+                setError("Failed to load stored actions. Please go back and submit a new prompt.");
             }
+        } else {
+            console.log("📝 No actions found in localStorage");
+            setParsedActions([]);
         }
     }, []);
 
     const executeActions = async () => {
-        if (!isConnected) {
-            setError("Please connect your wallet first");
-            return;
-        }
-
-        if (!parsedActions || parsedActions.length === 0) {
-            setError("No actions to execute");
-            return;
-        }
-
-        setExecutionStatus("executing");
-        setError("");
-
         try {
+            console.log("🚀 Starting execution...");
+            console.log("Connected:", isConnected);
+            console.log("Parsed actions:", parsedActions);
+            console.log("Actions length:", parsedActions?.length);
+
+            if (!isConnected) {
+                setError("Please connect your wallet first");
+                return;
+            }
+
+            // CRITICAL: Validate parsedActions before proceeding
+            if (!parsedActions || !Array.isArray(parsedActions) || parsedActions.length === 0) {
+                console.error("❌ Invalid parsedActions:", parsedActions);
+                setError("No valid actions to execute. Please go back and submit a prompt.");
+                return;
+            }
+
+            console.log(`✅ About to execute ${parsedActions.length} actions`);
+
+            setExecutionStatus("executing");
+            setError("");
+
             // For demo, we'll execute on ZetaChain Athens (7001)
             const targetChainId = 7001;
             
             // Check if we need to switch chains
             if (chainId !== targetChainId) {
+                console.log(`🔄 Switching from chain ${chainId} to ${targetChainId}`);
                 setExecutionStatus("switching_chain");
                 await switchChain({ chainId: targetChainId });
                 // Wait a bit for chain switch
@@ -248,16 +273,18 @@ export default function ExecutePage() {
 
             setExecutionStatus("executing");
             
-            // Execute the actions
+            // Execute the actions with additional validation
+            console.log("📋 Final actions check before execution:", parsedActions);
+            
             const result = await executeActionsWithWagmi(parsedActions, targetChainId);
             
             setTxHash(result.hash);
             setExecutionStatus("completed");
             
-            console.log("Transaction successful:", result);
+            console.log("✅ Transaction successful:", result);
             
         } catch (err) {
-            console.error("Execution error:", err);
+            console.error("❌ Execution error:", err);
             setError(err.message || "Transaction failed");
             setExecutionStatus("error");
         }
@@ -275,6 +302,22 @@ export default function ExecutePage() {
         (params) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
         [setEdges]
     );
+
+    // Safe getter for actions count to prevent undefined errors
+    const getActionsCount = () => {
+        return parsedActions && Array.isArray(parsedActions) ? parsedActions.length : 0;
+    };
+
+    // Safe getter for target chains count
+    const getTargetChainsCount = () => {
+        if (!parsedActions || !Array.isArray(parsedActions)) return 0;
+        try {
+            return new Set(parsedActions.map(a => a?.targetChainId).filter(id => id !== undefined)).size;
+        } catch (error) {
+            console.warn("Error counting target chains:", error);
+            return 0;
+        }
+    };
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-hidden">
@@ -332,18 +375,18 @@ export default function ExecutePage() {
                         <h2 className="text-lg font-semibold text-white mb-3">Your Request</h2>
                         <p className="text-gray-300 italic text-lg mb-4">"{userPrompt}"</p>
                         
-                        {parsedActions && parsedActions.length > 0 && (
+                        {getActionsCount() > 0 && (
                             <div>
                                 <h3 className="text-md font-semibold text-white mb-3">Parsed Actions:</h3>
                                 <div className="space-y-2">
                                     {parsedActions.map((action, index) => (
                                         <div key={index} className="bg-black/20 rounded-lg p-3 text-sm">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-purple-400 font-medium">{action.actionType}</span>
-                                                <span className="text-gray-400">Chain: {action.targetChainId}</span>
+                                                <span className="text-purple-400 font-medium">{action?.actionType || 'unknown'}</span>
+                                                <span className="text-gray-400">Chain: {action?.targetChainId || 'unknown'}</span>
                                             </div>
                                             <div className="text-gray-300 mt-1">
-                                                Amount: {action.amount} wei → {action.recipient?.slice(0, 6)}...
+                                                Amount: {action?.amount || '0'} wei → {action?.recipient?.slice(0, 6) || 'unknown'}...
                                             </div>
                                         </div>
                                     ))}
@@ -352,7 +395,7 @@ export default function ExecutePage() {
                         )}
 
                         {/* Show message when no actions */}
-                        {(!parsedActions || parsedActions.length === 0) && (
+                        {getActionsCount() === 0 && (
                             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                                 <p className="text-yellow-400">No actions parsed. Please go back and submit a prompt.</p>
                             </div>
@@ -406,7 +449,7 @@ export default function ExecutePage() {
                         <div className="flex items-center space-x-3">
                             <button
                                 onClick={executeActions}
-                                disabled={!isConnected || !parsedActions || parsedActions.length === 0 || executionStatus === 'executing' || executionStatus === 'switching_chain'}
+                                disabled={!isConnected || getActionsCount() === 0 || executionStatus === 'executing' || executionStatus === 'switching_chain'}
                                 className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-blue-500 px-6 py-3 rounded-xl hover:from-purple-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Play className="w-4 h-4" />
@@ -447,7 +490,7 @@ export default function ExecutePage() {
                     )}
                 </div>
 
-                {/* React Flow Node-Based Visualization */}
+                {/* React Flow Visualization */}
                 <div className="relative bg-gradient-to-br from-black/50 to-gray-900/50 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-2xl mb-8" style={{ height: 500 }}>
                     <div className="absolute top-4 left-6 z-10">
                         <h3 className="text-lg font-semibold text-white mb-1">
@@ -483,7 +526,6 @@ export default function ExecutePage() {
                                 borderRadius: "8px",
                             }}
                         />
-                        {/* Removed <FlowBackground /> to disable the grid */}
                     </ReactFlow>
                 </div>
 
@@ -500,12 +542,12 @@ export default function ExecutePage() {
                         <div className="grid md:grid-cols-3 gap-6 text-sm">
                             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                                 <p className="text-gray-400 mb-1">Actions Executed</p>
-                                <p className="text-white font-bold text-2xl">{parsedActions?.length || 0}</p>
+                                <p className="text-white font-bold text-2xl">{getActionsCount()}</p>
                             </div>
                             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                                 <p className="text-gray-400 mb-1">Target Chains</p>
                                 <p className="text-white font-bold text-2xl">
-                                    {parsedActions ? new Set(parsedActions.map(a => a.targetChainId)).size : 0}
+                                    {getTargetChainsCount()}
                                 </p>
                             </div>
                             <div className="bg-white/5 rounded-xl p-4 border border-white/10">

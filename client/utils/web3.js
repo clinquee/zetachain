@@ -1,8 +1,244 @@
-import { writeContract, waitForTransactionReceipt } from 'wagmi/actions';
-import { parseEther, formatEther, parseUnits } from 'viem';
+import { writeContract, waitForTransactionReceipt, readContract, getAccount } from 'wagmi/actions';
+import { parseEther, formatEther } from 'viem';
 import { config } from '../lib/wagmi';
 import { CONTRACT_ADDRESSES } from './contracts';
-import { ZetaVaultExecutorABI } from '../abis/ZetaVaultExtractor';
+import { IZRC20_ABI } from '../abis/IZRC20';
+import { ZetaVaultExecutorABI } from '@/abis/ZetaVaultExtractor';
+
+// ZRC20 Token addresses from your deployment
+const ZRC20_TOKENS = {
+    ETH_SEPOLIA: '0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0', // sETH.SEPOLIA
+    ETH_ARBITRUM: '0x1de70f3e971B62A0707dA18100392af14f7fB677', // ETH.ARBSEP
+    ETH_BASE: '0x236b0DE675cC8F46AE186897fCCeFe3370C9eDeD', // ETH.BASESEPOLIA
+    USDC_SEPOLIA: '0xcC683A782f4B30c138787CB5576a86AF66fdc31d', // USDC.SEPOLIA
+    USDC_ARBITRUM: '0x4bC32034caCcc9B7e02536945eDbC286bACbA073', // USDC.ARBSEP
+    USDC_POLYGON: '0xe573a6e11f8506620F123DBF930222163D46BCB6', // USDC.AMOY
+    BNB_BSC: '0xd97B1de3619ed2c6BEb3860147E30cA8A7dC9891', // BNB.BSC
+    AVAX_FUJI: '0xEe9CC614D03e7Dbe994b514079f4914a605B4719', // AVAX.FUJI
+    POL_AMOY: '0x777915D031d1e8144c90D025C594b3b8Bf07a08d', // POL.AMOY
+};
+
+// Function to check contract ownership and token support
+export const validateContractSetup = async () => {
+    try {
+        console.log('🔍 Validating contract setup...');
+        
+        // Check contract owner
+        const owner = await readContract(config, {
+            address: CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR,
+            abi: ZetaVaultExecutorABI,
+            functionName: 'owner',
+            chainId: 7001,
+        });
+        
+        // Check if paused
+        const isPaused = await readContract(config, {
+            address: CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR,
+            abi: ZetaVaultExecutorABI,
+            functionName: 'paused',
+            chainId: 7001,
+        });
+        
+        // Check token support for key tokens
+        const tokenChecks = await Promise.allSettled([
+            readContract(config, {
+                address: CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR,
+                abi: ZetaVaultExecutorABI,
+                functionName: 'supportedTokens',
+                args: [ZRC20_TOKENS.ETH_SEPOLIA],
+                chainId: 7001,
+            }),
+            readContract(config, {
+                address: CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR,
+                abi: ZetaVaultExecutorABI,
+                functionName: 'supportedTokens',
+                args: [ZRC20_TOKENS.USDC_SEPOLIA],
+                chainId: 7001,
+            })
+        ]);
+        
+        const sethSupported = tokenChecks[0].status === 'fulfilled' ? tokenChecks[0].value : false;
+        const usdcSupported = tokenChecks[1].status === 'fulfilled' ? tokenChecks[1].value : false;
+        
+        const setupStatus = {
+            contractAddress: CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR,
+            owner: owner,
+            isPaused: isPaused,
+            tokensSupported: {
+                sETH: sethSupported,
+                USDC: usdcSupported
+            },
+            isReady: !isPaused && (sethSupported || usdcSupported)
+        };
+        
+        console.log('📊 Contract Setup Status:', setupStatus);
+        return setupStatus;
+        
+    } catch (error) {
+        console.error('❌ Failed to validate contract setup:', error);
+        return {
+            isReady: false,
+            error: error.message
+        };
+    }
+};
+
+// Enhanced token validation before execution
+export const validateTokenSupport = async (tokenAddress) => {
+    try {
+        const isSupported = await readContract(config, {
+            address: CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR,
+            abi: ZetaVaultExecutorABI,
+            functionName: 'supportedTokens',
+            args: [tokenAddress],
+            chainId: 7001,
+        });
+        
+        if (!isSupported) {
+            throw new Error(`Token ${tokenAddress} is not supported by the contract. Please contact the contract owner to add support.`);
+        }
+        
+        return true;
+    } catch (error) {
+        console.error(`Token validation failed for ${tokenAddress}:`, error);
+        throw error;
+    }
+};
+
+// Helper function to approve ZRC20 tokens
+export const approveZRC20Token = async (tokenAddress, spenderAddress, amount) => {
+    try {
+        console.log(`🔐 Approving ${tokenAddress} for ${spenderAddress}`);
+        console.log(`💰 Amount: ${amount.toString()}`);
+
+        // Get current account using the correct Wagmi v2 method
+        const account = getAccount(config);
+        if (!account.address) {
+            throw new Error('No wallet connected. Please connect your wallet first.');
+        }
+
+        console.log(`👤 Account: ${account.address}`);
+
+        // Check current allowance first
+        const currentAllowance = await readContract(config, {
+            address: tokenAddress,
+            abi: IZRC20_ABI,
+            functionName: 'allowance',
+            args: [account.address, spenderAddress],
+            chainId: 7001, // ZetaChain
+        });
+
+        console.log(`📋 Current allowance: ${currentAllowance.toString()}`);
+
+        // If allowance is sufficient, no need to approve again
+        if (currentAllowance >= amount) {
+            console.log(`✅ Sufficient allowance already exists`);
+            return true;
+        }
+
+        // Approve the contract to spend tokens
+        const approveHash = await writeContract(config, {
+            address: tokenAddress,
+            abi: IZRC20_ABI,
+            functionName: 'approve',
+            args: [spenderAddress, amount],
+            chainId: 7001, // ZetaChain
+        });
+
+        console.log(`📝 Approval transaction: ${approveHash}`);
+
+        // Wait for approval confirmation
+        const approveReceipt = await waitForTransactionReceipt(config, {
+            hash: approveHash,
+            chainId: 7001,
+        });
+
+        console.log(`✅ Approval confirmed!`, approveReceipt);
+        return approveHash;
+
+    } catch (error) {
+        console.error(`❌ Approval failed:`, error);
+        throw new Error(`Failed to approve ${tokenAddress}: ${error.message}`);
+    }
+};
+
+// Helper function to check if approval is needed
+export const checkAndApproveTokens = async (actions) => {
+    const approvalsNeeded = [];
+    const spenderAddress = CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR;
+
+    // Get current account
+    const account = getAccount(config);
+    if (!account.address) {
+        throw new Error('No wallet connected. Please connect your wallet first.');
+    }
+
+    for (const action of actions) {
+        // Skip NFT actions and zero amounts
+        if (action.actionType === 'mintNFT' || action.actionType === 'transferNFT' || action.amount === '0') {
+            continue;
+        }
+
+        // Check if this token needs approval
+        try {
+            const currentAllowance = await readContract(config, {
+                address: action.tokenAddress,
+                abi: IZRC20_ABI,
+                functionName: 'allowance',
+                args: [account.address, spenderAddress],
+                chainId: 7001,
+            });
+
+            if (currentAllowance < BigInt(action.amount)) {
+                approvalsNeeded.push({
+                    tokenAddress: action.tokenAddress,
+                    amount: BigInt(action.amount),
+                    currentAllowance: currentAllowance
+                });
+            }
+        } catch (error) {
+            console.warn(`Could not check allowance for ${action.tokenAddress}:`, error);
+            // Add to approvals needed as a precaution
+            approvalsNeeded.push({
+                tokenAddress: action.tokenAddress,
+                amount: BigInt(action.amount),
+                currentAllowance: BigInt(0)
+            });
+        }
+    }
+
+    return approvalsNeeded;
+};
+
+// Execute approvals for all needed tokens
+export const executeApprovals = async (approvalsNeeded) => {
+    const approvalHashes = [];
+    const spenderAddress = CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR;
+
+    for (const approval of approvalsNeeded) {
+        try {
+            const hash = await approveZRC20Token(
+                approval.tokenAddress, 
+                spenderAddress, 
+                approval.amount
+            );
+            approvalHashes.push({
+                tokenAddress: approval.tokenAddress,
+                hash: hash,
+                amount: approval.amount
+            });
+
+            // Wait a bit between approvals
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+        } catch (error) {
+            console.error(`Failed to approve ${approval.tokenAddress}:`, error);
+            throw error;
+        }
+    }
+
+    return approvalHashes;
+};
 
 // Helper function to safely convert to BigInt
 const safeBigInt = (value, defaultValue = 0) => {
@@ -89,11 +325,11 @@ const validateAndCleanAction = (action, index) => {
     recipient = CONTRACT_ADDRESSES.OWNER;
   }
 
-  // Validate and clean token address
-  let tokenAddress = action.tokenAddress || '0x0000000000000000000000000000000000000000';
-  if (!tokenAddress || typeof tokenAddress !== 'string' || !tokenAddress.startsWith('0x')) {
-    console.warn(`Invalid token address: ${tokenAddress}, using ETH`);
-    tokenAddress = '0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0'; // sETH.SEPOLIA
+  // Validate and clean token address - use proper ZRC20 instead of zero address
+  let tokenAddress = action.tokenAddress;
+  if (!tokenAddress || tokenAddress === '0x0000000000000000000000000000000000000000') {
+    console.warn(`Invalid or zero token address: ${tokenAddress}, using sETH.SEPOLIA`);
+    tokenAddress = ZRC20_TOKENS.ETH_SEPOLIA; // Use proper ZRC20 token
   }
 
   // Clean and validate amounts
@@ -127,13 +363,21 @@ const validateAndCleanAction = (action, index) => {
 // Execute actions using Wagmi + Viem
 export const executeActionsWithWagmi = async (actions, chainId) => {
   try {
-    console.log('🚀 Starting action execution...');
-    console.log('📥 Raw actions received:', actions);
-    console.log('📥 Actions type:', typeof actions);
-    console.log('📥 Actions is array:', Array.isArray(actions));
-    console.log('🔗 Target Chain ID:', chainId);
-    console.log('📋 Contract Address:', CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR);
+    console.log('🚀 Starting action execution with validation...');
     
+    // Step 0: Validate contract setup
+    const setupStatus = await validateContractSetup();
+    if (!setupStatus.isReady) {
+        throw new Error(`Contract not ready: ${setupStatus.error || 'Contract is paused or tokens not supported'}`);
+    }
+    
+    // Check wallet connection first
+    const account = getAccount(config);
+    if (!account.address) {
+      throw new Error('No wallet connected. Please connect your wallet to continue.');
+    }
+    console.log(`👤 Connected account: ${account.address}`);
+
     // Enhanced validation with better error messages
     if (actions === null || actions === undefined) {
       throw new Error('Actions parameter is null or undefined. Please submit a prompt first.');
@@ -152,13 +396,11 @@ export const executeActionsWithWagmi = async (actions, chainId) => {
     if (Array.isArray(actions)) {
       actionsArray = actions;
     } else if (actions && typeof actions === 'object') {
-      // If it's a single action object, wrap it in an array
       actionsArray = [actions];
     } else {
-      throw new Error(`Invalid actions format. Expected array or object, got ${typeof actions}. Please submit a new prompt.`);
+      throw new Error(`Invalid actions format. Expected array or object, got ${typeof actions}.`);
     }
     
-    // Check if array is empty
     if (actionsArray.length === 0) {
       throw new Error('No actions to execute. Please submit a prompt with valid actions.');
     }
@@ -191,29 +433,78 @@ export const executeActionsWithWagmi = async (actions, chainId) => {
 
     console.log('📤 Final formatted actions for contract:', formattedActions);
 
-    // Validate contract address
-    if (!CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR || !CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR.startsWith('0x')) {
-      throw new Error('Invalid contract address configuration. Please check environment variables.');
+    // CRITICAL: Validate formattedActions is still valid after processing
+    if (!formattedActions || !Array.isArray(formattedActions) || formattedActions.length === 0) {
+      throw new Error('Formatted actions became invalid during processing. Please try again.');
     }
 
-    // Validate chain ID
+    // IMPORTANT: Store the count early to prevent variable scope issues
+    const actionsCount = formattedActions.length;
+    console.log(`📊 Actions count preserved: ${actionsCount}`);
+
+    // Step 1: Validate token support for all actions
+    console.log('🔐 Step 1: Validating token support...');
+    for (const action of formattedActions) {
+        if (action.actionType !== 'mintNFT' && action.actionType !== 'transferNFT') {
+            await validateTokenSupport(action.tokenAddress);
+        }
+    }
+    console.log('✅ All tokens are supported');
+
+    // Step 2: Check which tokens need approval
+    console.log('🔐 Step 2: Checking token approvals...');
+    const approvalsNeeded = await checkAndApproveTokens(formattedActions);
+    let approvalsCount = 0;
+    
+    if (approvalsNeeded.length > 0) {
+      console.log(`🔑 Found ${approvalsNeeded.length} tokens that need approval:`, approvalsNeeded);
+      approvalsCount = approvalsNeeded.length;
+      
+      // Execute approvals
+      const approvalResults = await executeApprovals(approvalsNeeded);
+      console.log(`✅ All approvals completed:`, approvalResults);
+      
+      // Add a small delay after approvals to ensure blockchain state is updated
+      console.log('⏳ Waiting for approval state to propagate...');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    } else {
+      console.log(`✅ No approvals needed, all tokens already approved`);
+    }
+
+    // Step 3: Execute the main transaction
+    console.log('🔥 Step 3: Executing main transaction...');
+    
+    // DOUBLE CHECK: Ensure formattedActions is still valid
+    if (!formattedActions || !Array.isArray(formattedActions)) {
+      throw new Error('Critical error: formattedActions became undefined. Please try again.');
+    }
+    
+    if (formattedActions.length === 0) {
+      throw new Error('Critical error: formattedActions is empty. Please try again.');
+    }
+
+    console.log(`🚀 About to execute ${formattedActions.length} actions:`, formattedActions);
+    
+    // Create a deep copy of formattedActions to prevent reference issues
+    const actionsForContract = formattedActions.map(action => ({
+      actionType: action.actionType,
+      recipient: action.recipient,
+      amount: action.amount,
+      tokenAddress: action.tokenAddress,
+      targetChainId: action.targetChainId,
+      metadataURI: action.metadataURI,
+      tokenId: action.tokenId,
+    }));
+
+    console.log(`📝 Cleaned actions for contract:`, actionsForContract);
+    
     const targetChainId = chainId || 7001;
-    if (typeof targetChainId !== 'number' || targetChainId < 1) {
-      throw new Error(`Invalid chain ID: ${targetChainId}`);
-    }
-
-    console.log('📞 Calling writeContract...');
-    console.log('- Contract:', CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR);
-    console.log('- Chain ID:', targetChainId);
-    console.log('- Function: executeActions');
-    console.log('- Args:', [formattedActions]);
-
-    // Execute the transaction
+    
     const hash = await writeContract(config, {
       address: CONTRACT_ADDRESSES.ZETA_VAULT_EXECUTOR,
       abi: ZetaVaultExecutorABI,
       functionName: 'executeActions',
-      args: [formattedActions],
+      args: [actionsForContract],
       chainId: targetChainId,
     });
 
@@ -228,64 +519,37 @@ export const executeActionsWithWagmi = async (actions, chainId) => {
 
     console.log('🎉 Transaction confirmed!', receipt);
 
-    // Determine explorer URL based on chain
-    let explorerUrl;
-    switch (targetChainId) {
-      case 7001:
-        explorerUrl = `https://zetachain-athens.blockscout.com/tx/${hash}`;
-        break;
-      case 11155111:
-        explorerUrl = `https://sepolia.etherscan.io/tx/${hash}`;
-        break;
-      case 80002:
-        explorerUrl = `https://amoy.polygonscan.com/tx/${hash}`;
-        break;
-      case 421614:
-        explorerUrl = `https://sepolia.arbiscan.io/tx/${hash}`;
-        break;
-      case 84532:
-        explorerUrl = `https://sepolia.basescan.org/tx/${hash}`;
-        break;
-      case 43113:
-        explorerUrl = `https://testnet.snowtrace.io/tx/${hash}`;
-        break;
-      default:
-        explorerUrl = `https://zetachain-athens.blockscout.com/tx/${hash}`;
-    }
+    const explorerUrl = `https://zetachain-athens.blockscout.com/tx/${hash}`;
 
+    // Use the preserved count instead of accessing formattedActions.length
     return {
       hash,
       receipt,
       success: true,
       explorerUrl,
-      actionsExecuted: formattedActions.length
+      actionsExecuted: actionsCount, // Use preserved count
+      approvalsNeeded: approvalsCount
     };
+
   } catch (error) {
     console.error('❌ Error executing actions:', error);
     
-    // Enhanced error handling with more specific error types
-    if (error.message?.includes('User rejected') || error.message?.includes('User denied')) {
+    // Enhanced error handling
+    if (error.message?.includes('No wallet connected')) {
+      throw new Error('Please connect your wallet first to execute transactions.');
+    } else if (error.message?.includes('not supported')) {
+      throw new Error(`Token not supported: ${error.message}`);
+    } else if (error.message?.includes('Contract not ready')) {
+      throw new Error(`Contract setup incomplete: ${error.message}`);
+    } else if (error.message?.includes('0xd92e233d') || error.message?.includes('OwnableUnauthorizedAccount')) {
+      throw new Error('Access denied: The contract owner needs to add token support first. Please contact the project team.');
+    } else if (error.message?.includes('User rejected') || error.message?.includes('User denied')) {
       throw new Error('Transaction was rejected by user');
     } else if (error.message?.includes('insufficient funds')) {
       throw new Error('Insufficient funds for transaction and gas fees');
-    } else if (error.message?.includes('allowance')) {
-      throw new Error('Please approve the contract to spend your tokens first');
-    } else if (error.message?.includes('Invalid action type')) {
-      throw new Error('One or more actions contain invalid action types');
-    } else if (error.message?.includes('validation failed')) {
-      throw new Error(error.message); // Pass through validation errors
-    } else if (error.message?.includes('Contract call reverted')) {
-      throw new Error('Transaction reverted - check contract requirements and balances');
-    } else if (error.message?.includes('network')) {
-      throw new Error('Network error - please check your connection and try again');
-    } else if (error.message?.includes('Cannot read properties')) {
-      throw new Error('Action data format error - please submit a new prompt');
-    } else if (error.message?.includes('Invalid contract address')) {
-      throw new Error('Contract configuration error - please contact support');
-    } else if (error.message?.includes('null or undefined')) {
-      throw new Error(error.message); // Pass through null/undefined errors
+    } else if (error.message?.includes('allowance') || error.message?.includes('ERC20: transfer amount exceeds allowance')) {
+      throw new Error('Token allowance insufficient. The approval step may have failed.');
     } else {
-      // Log the full error for debugging
       console.error('Full error details:', error);
       throw new Error(error.message || 'Transaction failed - please try again');
     }
@@ -338,3 +602,6 @@ export const debugAction = (action) => {
   console.log('- Values:', Object.values(action || {}));
   console.log('- Full action:', action);
 };
+
+// Export available tokens for reference
+export { ZRC20_TOKENS };

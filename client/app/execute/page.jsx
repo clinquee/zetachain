@@ -443,15 +443,6 @@ export default function ExecutePage() {
                                 className="rounded-2xl"
                                 style={{ background: "transparent" }}
                             >
-                                <MiniMap
-                                    style={{
-                                        background: "rgba(0, 0, 0, 0.8)",
-                                        border: "1px solid rgba(255, 255, 255, 0.1)",
-                                        borderRadius: "8px",
-                                    }}
-                                    nodeColor="#667eea"
-                                    maskColor="rgba(0, 0, 0, 0.2)"
-                                />
                                 <Controls
                                     style={{
                                         background: "rgba(0, 0, 0, 0.8)",

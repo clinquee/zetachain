@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { ArrowLeft, CheckCircle, Zap, Play, Pause, RotateCcw, Wallet, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import Aurora from "../../components/Aurora";
 import { executeActionsWithWagmi } from "../../utils/web3";
+import GridBackgroundDemo from "../../components/ui/grid-background-demo";
 import {
     ReactFlow,
     MiniMap,
@@ -321,14 +321,9 @@ export default function ExecutePage() {
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-hidden">
-            {/* Aurora Background */}
-            <div className="absolute inset-0 z-0">
-                <Aurora
-                    colorStops={["#1a1a2e", "#16213e", "#0f3460"]}
-                    amplitude={0.8}
-                    blend={0.3}
-                    speed={0.5}
-                />
+            {/* Grid Background */}
+            <div className="fixed inset-0 z-0">
+                <GridBackgroundDemo />
             </div>
 
             {/* Header */}
@@ -341,7 +336,7 @@ export default function ExecutePage() {
                         <span className="font-medium">Back to Home</span>
                     </Link>
                     <div className="text-right">
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-green-400 bg-clip-text text-transparent">
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent">
                             Execute Cross-Chain Actions
                         </h1>
                         <p className="text-gray-400 mt-1">ZetaChain powered execution</p>
@@ -385,9 +380,7 @@ export default function ExecutePage() {
               .card--border-glow:hover::after {
                 opacity: 1;
               }
-              .card--border-glow:hover {
-                box-shadow: 0 4px 20px rgba(46, 24, 78, 0.4), 0 0 30px rgba(132,0,255, 0.2);
-              }
+
               .particle::before {
                 content: '';
                 position: absolute;
@@ -503,7 +496,7 @@ export default function ExecutePage() {
                                 <button
                                     onClick={executeActions}
                                     disabled={!isConnected || getActionsCount() === 0 || executionStatus === 'executing' || executionStatus === 'switching_chain'}
-                                    className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-blue-500 px-6 py-3 rounded-xl hover:from-purple-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex items-center space-x-2 bg-gradient-to-r from-gray-600 via-white to-gray-600 text-black px-6 py-3 rounded-xl hover:from-gray-700 hover:to-gray-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Play className="w-4 h-4" />
                                     <span className="font-medium">Execute</span>
@@ -552,7 +545,7 @@ export default function ExecutePage() {
                                         {parsedActions.map((action, index) => (
                                             <div key={index} className="bg-black/20 rounded-lg p-3 text-sm">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-purple-400 font-medium break-all">{action?.actionType || 'unknown'}</span>
+                                                    <span className="text-white font-medium break-all">{action?.actionType || 'unknown'}</span>
                                                     <span className="text-gray-400 break-all">Chain: {action?.targetChainId || 'unknown'}</span>
                                                 </div>
                                                 <div className="text-gray-300 mt-1 break-all">
@@ -589,14 +582,14 @@ export default function ExecutePage() {
                 {/* Results Summary */}
                 {executionStatus === "completed" && (
                     <div className="mb-8">
-                        <div className="bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-teal-500/20 backdrop-blur-sm border border-green-500/30 rounded-2xl p-8 flex-1 flex flex-col justify-center">
-                            <div className="flex items-center space-x-4 mb-6">
-                                <CheckCircle className="w-12 h-12 text-green-400" />
-                                <div>
-                                    <h2 className="text-2xl font-bold text-green-400">Execution Successful!</h2>
-                                    <p className="text-green-300">Your cross-chain actions have been executed</p>
-                                </div>
-                            </div>
+                        <div className="bg-gradient-to-r from-white/10 via-gray-500/10 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 flex-1 flex flex-col justify-center">
+                                                                <div className="flex items-center space-x-4 mb-6">
+                                        <CheckCircle className="w-12 h-12 text-white" />
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white">Execution Successful!</h2>
+                                            <p className="text-gray-300">Your cross-chain actions have been executed</p>
+                                        </div>
+                                    </div>
                             <div className="grid md:grid-cols-3 gap-6 text-sm">
                                 <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                                     <p className="text-gray-400 mb-1">Actions Executed</p>
@@ -608,10 +601,10 @@ export default function ExecutePage() {
                                         {getTargetChainsCount()}
                                     </p>
                                 </div>
-                                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                    <p className="text-gray-400 mb-1">Status</p>
-                                    <p className="text-green-400 font-bold text-2xl">Success</p>
-                                </div>
+                                                                    <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                        <p className="text-gray-400 mb-1">Status</p>
+                                        <p className="text-white font-bold text-2xl">Success</p>
+                                    </div>
                             </div>
                         </div>
                     </div>

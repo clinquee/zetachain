@@ -114,7 +114,7 @@ export default function HeroSection() {
 
                 {/* Main Heading */}
                 <h1 className="text-5xl lg:text-8xl font-bold mb-8 leading-tight">
-                    <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                    <span className="bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent">
                         The Future of
                     </span>
                     <br />
@@ -140,7 +140,7 @@ export default function HeroSection() {
                             disabled={
                                 isLoading || serverStatus === "disconnected"
                             }
-                            className="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg disabled:opacity-50"
+                            className="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white text-lg disabled:opacity-50"
                         />
                         <button
                             type="submit"
@@ -149,7 +149,7 @@ export default function HeroSection() {
                                 !prompt.trim() ||
                                 serverStatus === "disconnected"
                             }
-                            className="absolute right-2 top-2 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white p-3 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="absolute right-2 top-2 bg-gradient-to-r from-gray-600 via-white to-gray-600 text-black p-3 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -175,7 +175,7 @@ export default function HeroSection() {
                             )
                         }
                         disabled={serverStatus === "disconnected"}
-                        className="bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-gradient-to-r from-gray-600 via-white to-gray-600 text-black px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <div className="flex items-center space-x-2">
                             <Zap className="w-5 h-5" />

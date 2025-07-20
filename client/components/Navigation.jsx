@@ -36,7 +36,7 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
-            <a href="#features" className="text-gray-200 hover:text-white transition-colors">
+            {/* <a href="#features" className="text-gray-200 hover:text-white transition-colors">
               Features
             </a>
             <a href="#how-it-works" className="text-gray-200 hover:text-white transition-colors">
@@ -44,7 +44,7 @@ export default function Navigation() {
             </a>
             <a href="#demo" className="text-gray-200 hover:text-white transition-colors">
               Demo
-            </a>
+            </a> */}
             
             {/* RainbowKit Connect Button */}
             <ConnectButton.Custom>

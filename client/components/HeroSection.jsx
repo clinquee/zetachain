@@ -104,13 +104,13 @@ export default function HeroSection() {
     return (
         <div className="relative min-h-screen flex items-center justify-center px-6 lg:px-8 pt-20">
             <div className="relative z-10 max-w-6xl mx-auto text-center">
-                {/* Badge */}
+                {/* Badge
                 <div className="inline-flex items-center space-x-2 text-white/80 mb-8">
                     <Sparkles className="w-4 h-4 text-purple-400" />
                     <span className="text-sm">
                         AI-Powered Cross-Chain Execution
                     </span>
-                </div>
+                </div> */}
 
                 {/* Main Heading */}
                 <h1 className="text-5xl lg:text-8xl font-bold mb-8 leading-tight">
@@ -193,7 +193,7 @@ export default function HeroSection() {
                     </button>
                 </div>
 
-                {/* Debug Info (remove in production) */}
+                {/* Debug Info (remove in production)
                 {process.env.NODE_ENV === "development" && (
                     <div className="mt-8 text-xs text-gray-500">
                         <p>Prompt: {prompt}</p>
@@ -201,7 +201,7 @@ export default function HeroSection() {
                         <p>Error: {error}</p>
                         <p>Server Status: {serverStatus}</p>
                     </div>
-                )}
+                )} */}
             </div>
         </div>
     );

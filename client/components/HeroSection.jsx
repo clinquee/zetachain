@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { ArrowRight, Play, Sparkles, Zap, Globe, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { chatAPI } from "../utils/api";
+import { AnimatedUnderlineTextOne } from "./ui/animated-underline-text-one";
+
 
 export default function HeroSection() {
     const [prompt, setPrompt] = useState("");
@@ -114,15 +116,16 @@ export default function HeroSection() {
 
                 {/* Main Heading */}
                 <h1 className="text-5xl lg:text-8xl font-bold mb-8 leading-tight">
-                    <span className="bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent">
-                        The Future of
+                    <span className="bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent pr-9">
+                        The Future of 
                     </span>
-                    <br />
-                    <span className="text-white">DeFi is Here</span>
+                    <AnimatedUnderlineTextOne className="text-white">
+                         Defi
+                    </AnimatedUnderlineTextOne>
                 </h1>
 
                 {/* Subtitle */}
-                <p className="text-xl lg:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
+                <p className="text-l lg:text-xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
                     Transform natural language into executable cross-chain
                     actions. From simple transfers to complex DeFi strategies -
                     just describe what you want.
@@ -202,7 +205,11 @@ export default function HeroSection() {
                         <p>Server Status: {serverStatus}</p>
                     </div>
                 )} */}
+                            {/* Text Marquee Section */}
+
             </div>
+
+
         </div>
     );
 }

@@ -327,7 +327,7 @@ export default function ExecutePage() {
             </div>
 
             {/* Header */}
-            <div className="relative z-10 max-w-7xl mx-auto px-6 pt-8 pb-2">
+            <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-2">
                 <div className="flex items-center justify-between">
                     <Link href="/" className="group flex items-center space-x-2 text-gray-300 hover:text-white transition-all duration-300">
                         <div className="p-2 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 transition-all duration-300">

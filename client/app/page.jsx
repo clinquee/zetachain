@@ -1,18 +1,13 @@
 import Navigation from "../components/Navigation";
 import HeroSection from "../components/HeroSection";
-import Aurora from "../components/Aurora";
+import GridBackgroundDemo from "../components/ui/grid-background-demo";
 
 export default function Home() {
     return (
         <div className="min-h-screen relative overflow-hidden bg-black">
-            {/* Aurora Background */}
+            {/* Grid Background Demo */}
             <div className="fixed inset-0 z-0">
-                <Aurora
-                    colorStops={["#1a1a2e", "#16213e", "#0f3460"]}
-                    amplitude={0.8}
-                    blend={0.3}
-                    speed={0.5}
-                />
+                <GridBackgroundDemo />
             </div>
 
             {/* Content */}

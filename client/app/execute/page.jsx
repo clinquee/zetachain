@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { ArrowLeft, CheckCircle, Zap, Play, Pause, RotateCcw, Wallet, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import Aurora from "../../components/Aurora";
 import { executeActionsWithWagmi } from "../../utils/web3";
+import GridBackgroundDemo from "../../components/ui/grid-background-demo";
 import {
     ReactFlow,
     MiniMap,
@@ -321,19 +321,14 @@ export default function ExecutePage() {
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-hidden">
-            {/* Aurora Background */}
-            <div className="absolute inset-0 z-0">
-                <Aurora
-                    colorStops={["#5227FF", "#7cff67", "#5227FF"]}
-                    amplitude={1.2}
-                    blend={0.6}
-                    speed={0.8}
-                />
+            {/* Grid Background */}
+            <div className="fixed inset-0 z-0">
+                <GridBackgroundDemo />
             </div>
-            
-            <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
+
+            {/* Header */}
+            <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-2">
+                <div className="flex items-center justify-between">
                     <Link href="/" className="group flex items-center space-x-2 text-gray-300 hover:text-white transition-all duration-300">
                         <div className="p-2 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 transition-all duration-300">
                             <ArrowLeft className="w-5 h-5" />
@@ -341,218 +336,275 @@ export default function ExecutePage() {
                         <span className="font-medium">Back to Home</span>
                     </Link>
                     <div className="text-right">
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-green-400 bg-clip-text text-transparent">
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent">
                             Execute Cross-Chain Actions
                         </h1>
                         <p className="text-gray-400 mt-1">ZetaChain powered execution</p>
                     </div>
                 </div>
+            </div>
 
-                {/* Wallet Status */}
-                <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 mb-8">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                            <Wallet className="w-6 h-6 text-blue-400" />
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">Wallet Status</h3>
-                                {isConnected ? (
-                                    <p className="text-green-400">Connected: {address?.slice(0, 6)}...{address?.slice(-4)}</p>
-                                ) : (
-                                    <p className="text-red-400">Not connected</p>
-                                )}
+            {/* Main Content - Stacked Layout */}
+            <style jsx global>{`
+              .bento-section {
+                --glow-x: 50%;
+                --glow-y: 50%;
+                --glow-intensity: 0;
+                --glow-radius: 200px;
+                --glow-color: 132, 0, 255;
+                --border-color: #392e4e;
+                --background-dark: #060010;
+                --white: hsl(0, 0%, 100%);
+                --purple-primary: rgba(132, 0, 255, 1);
+                --purple-glow: rgba(132, 0, 255, 0.2);
+                --purple-border: rgba(132, 0, 255, 0.8);
+              }
+              .card--border-glow::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                padding: 6px;
+                background: radial-gradient(var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+                    rgba(132,0,255, calc(var(--glow-intensity) * 0.8)) 0%,
+                    rgba(132,0,255, calc(var(--glow-intensity) * 0.4)) 30%,
+                    transparent 60%);
+                border-radius: inherit;
+                mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                mask-composite: subtract;
+                -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                -webkit-mask-composite: xor;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+                z-index: 1;
+              }
+              .card--border-glow:hover::after {
+                opacity: 1;
+              }
+
+              .particle::before {
+                content: '';
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                background: rgba(132,0,255, 0.2);
+                border-radius: 50%;
+                z-index: -1;
+              }
+              .particle-container:hover {
+                box-shadow: 0 4px 20px rgba(46, 24, 78, 0.2), 0 0 30px rgba(132,0,255, 0.2);
+              }
+              .text-clamp-1 {
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 1;
+                line-clamp: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+              .text-clamp-2 {
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+                line-clamp: 2;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+            `}</style>
+            <div className="relative z-10 max-w-7xl mx-auto px-6 pb-8 flex flex-col">
+                {/* Top Row: Workflow Visualization (left) and Wallet Status (right) */}
+                <div className="bento-section flex flex-col md:flex-row mb-8">
+                    {/* Workflow Visualization */}
+                    <div className="flex-1">
+                        <div className="card card--border-glow relative bg-gradient-to-br from-black/50 to-gray-900/50 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-2xl h-[350px] flex-1 flex flex-col">
+                            <div className="absolute top-4 left-6 z-10">
+                                <h3 className="text-lg font-semibold text-white mb-1">
+                                    Workflow Visualization
+                                </h3>
+                                <p className="text-sm text-gray-400">
+                                    Interactive execution flow
+                                </p>
                             </div>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-sm text-gray-400">Current Chain</p>
-                            <p className="text-white font-medium">Chain ID: {chainId}</p>
+                            <ReactFlow
+                                nodes={nodes}
+                                edges={edges}
+                                onNodesChange={onNodesChange}
+                                onEdgesChange={onEdgesChange}
+                                onConnect={onConnect}
+                                fitView
+                                className="rounded-2xl"
+                                style={{ background: "transparent" }}
+                            >
+                                <Controls
+                                    style={{
+                                        background: "rgba(0, 0, 0, 0.8)",
+                                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                                        borderRadius: "8px",
+                                    }}
+                                />
+                            </ReactFlow>
                         </div>
                     </div>
-                </div>
-
-                {/* User Prompt & Actions Display */}
-                {userPrompt && (
-                    <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 mb-8">
-                        <h2 className="text-lg font-semibold text-white mb-3">Your Request</h2>
-                        <p className="text-gray-300 italic text-lg mb-4">"{userPrompt}"</p>
-                        
-                        {getActionsCount() > 0 && (
-                            <div>
-                                <h3 className="text-md font-semibold text-white mb-3">Parsed Actions:</h3>
-                                <div className="space-y-2">
-                                    {parsedActions.map((action, index) => (
-                                        <div key={index} className="bg-black/20 rounded-lg p-3 text-sm">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-purple-400 font-medium">{action?.actionType || 'unknown'}</span>
-                                                <span className="text-gray-400">Chain: {action?.targetChainId || 'unknown'}</span>
-                                            </div>
-                                            <div className="text-gray-300 mt-1">
-                                                Amount: {action?.amount || '0'} wei → {action?.recipient?.slice(0, 6) || 'unknown'}...
-                                            </div>
-                                        </div>
-                                    ))}
+                    {/* Wallet Status and Execution Controls */}
+                    <div className="md:w-80 md:max-w-xs md:ml-6 mt-8 md:mt-0 flex flex-col">
+                        {/* Wallet Status */}
+                        <div className="card card--border-glow bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 flex flex-col justify-center h-full">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-4">
+                                    <Wallet className="w-6 h-6 text-blue-400" />
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-white">Wallet Status</h3>
+                                        {isConnected ? (
+                                            <p className="text-green-400">Connected: {address?.slice(0, 6)}...{address?.slice(-4)}</p>
+                                        ) : (
+                                            <p className="text-red-400">Not connected</p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm text-gray-400">Current Chain</p>
+                                    <p className="text-white font-medium">Chain ID: {chainId}</p>
                                 </div>
                             </div>
-                        )}
-
-                        {/* Show message when no actions */}
-                        {getActionsCount() === 0 && (
-                            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                                <p className="text-yellow-400">No actions parsed. Please go back and submit a prompt.</p>
+                        </div>
+                        {/* Execution Controls */}
+                        <div className="card card--border-glow mt-6 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 flex flex-col">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-semibold text-white">Execution Controls</h2>
+                                <div className={`flex items-center space-x-2 px-4 py-2 rounded-full border ${
+                                    executionStatus === 'completed' ? 'bg-green-500/20 border-green-500/30 text-green-400' :
+                                    executionStatus === 'error' ? 'bg-red-500/20 border-red-500/30 text-red-400' :
+                                    executionStatus === 'executing' || executionStatus === 'switching_chain' ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400' :
+                                    'bg-gray-500/20 border-gray-500/30 text-gray-400'
+                                }`}>
+                                    {executionStatus === 'executing' || executionStatus === 'switching_chain' ? (
+                                        <Zap className="w-5 h-5 animate-pulse" />
+                                    ) : executionStatus === 'completed' ? (
+                                        <CheckCircle className="w-5 h-5" />
+                                    ) : executionStatus === 'error' ? (
+                                        <AlertTriangle className="w-5 h-5" />
+                                    ) : (
+                                        <Play className="w-5 h-5" />
+                                    )}
+                                    <span className="font-semibold capitalize">
+                                        {executionStatus === 'switching_chain' ? 'Switching Chain' : executionStatus}
+                                    </span>
+                                </div>
                             </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Show message when no prompt */}
-                {!userPrompt && (
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6 mb-8">
-                        <div className="text-center">
-                            <h2 className="text-xl font-semibold text-blue-400 mb-2">No Request Found</h2>
-                            <p className="text-blue-300 mb-4">Please go back to the home page and submit a prompt first.</p>
-                            <Link 
-                                href="/" 
-                                className="inline-flex items-center space-x-2 bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-all duration-300"
-                            >
-                                <ArrowLeft className="w-4 h-4" />
-                                <span>Go Back Home</span>
-                            </Link>
-                        </div>
-                    </div>
-                )}
-
-                {/* Execution Controls */}
-                <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 mb-8">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-4">
-                            <h2 className="text-xl font-semibold text-white">Execution Controls</h2>
-                            <div className={`flex items-center space-x-2 px-4 py-2 rounded-full border ${
-                                executionStatus === 'completed' ? 'bg-green-500/20 border-green-500/30 text-green-400' :
-                                executionStatus === 'error' ? 'bg-red-500/20 border-red-500/30 text-red-400' :
-                                executionStatus === 'executing' || executionStatus === 'switching_chain' ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400' :
-                                'bg-gray-500/20 border-gray-500/30 text-gray-400'
-                            }`}>
-                                {executionStatus === 'executing' || executionStatus === 'switching_chain' ? (
-                                    <Zap className="w-5 h-5 animate-pulse" />
-                                ) : executionStatus === 'completed' ? (
-                                    <CheckCircle className="w-5 h-5" />
-                                ) : executionStatus === 'error' ? (
-                                    <AlertTriangle className="w-5 h-5" />
-                                ) : (
-                                    <Play className="w-5 h-5" />
-                                )}
-                                <span className="font-semibold capitalize">
-                                    {executionStatus === 'switching_chain' ? 'Switching Chain' : executionStatus}
-                                </span>
+                            <div className="flex items-center space-x-3">
+                                <button
+                                    onClick={executeActions}
+                                    disabled={!isConnected || getActionsCount() === 0 || executionStatus === 'executing' || executionStatus === 'switching_chain'}
+                                    className="flex items-center space-x-2 bg-gradient-to-r from-gray-600 via-white to-gray-600 text-black px-6 py-3 rounded-xl hover:from-gray-700 hover:to-gray-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Play className="w-4 h-4" />
+                                    <span className="font-medium">Execute</span>
+                                </button>
+                                <button
+                                    onClick={resetExecution}
+                                    className="flex items-center space-x-2 bg-gray-500/20 border border-gray-500/30 px-6 py-3 rounded-xl hover:bg-gray-500/30 transition-all duration-300"
+                                >
+                                    <RotateCcw className="w-4 h-4" />
+                                    <span className="font-medium">Reset</span>
+                                </button>
                             </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-3">
-                            <button
-                                onClick={executeActions}
-                                disabled={!isConnected || getActionsCount() === 0 || executionStatus === 'executing' || executionStatus === 'switching_chain'}
-                                className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-blue-500 px-6 py-3 rounded-xl hover:from-purple-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <Play className="w-4 h-4" />
-                                <span className="font-medium">Execute</span>
-                            </button>
-                            
-                            <button
-                                onClick={resetExecution}
-                                className="flex items-center space-x-2 bg-gray-500/20 border border-gray-500/30 px-6 py-3 rounded-xl hover:bg-gray-500/30 transition-all duration-300"
-                            >
-                                <RotateCcw className="w-4 h-4" />
-                                <span className="font-medium">Reset</span>
-                            </button>
+                            {error && (
+                                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mt-4">
+                                    <p className="text-red-400">{error}</p>
+                                </div>
+                            )}
+                            {txHash && (
+                                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mt-4">
+                                    <p className="text-green-400 font-medium">Transaction Hash:</p>
+                                    <p className="text-green-300 font-mono text-sm break-all">{txHash}</p>
+                                    <a 
+                                        href={`https://zetachain-athens.blockscout.com/tx/${txHash}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-400 hover:text-blue-300 underline text-sm"
+                                    >
+                                        View on Explorer →
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     </div>
-
-                    {/* Error Display */}
-                    {error && (
-                        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
-                            <p className="text-red-400">{error}</p>
-                        </div>
-                    )}
-
-                    {/* Transaction Hash */}
-                    {txHash && (
-                        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-                            <p className="text-green-400 font-medium">Transaction Hash:</p>
-                            <p className="text-green-300 font-mono text-sm break-all">{txHash}</p>
-                            <a 
-                                href={`https://zetachain-athens.blockscout.com/tx/${txHash}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 hover:text-blue-300 underline text-sm"
-                            >
-                                View on Explorer →
-                            </a>
-                        </div>
-                    )}
                 </div>
 
-                {/* React Flow Visualization */}
-                <div className="relative bg-gradient-to-br from-black/50 to-gray-900/50 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-2xl mb-8" style={{ height: 500 }}>
-                    <div className="absolute top-4 left-6 z-10">
-                        <h3 className="text-lg font-semibold text-white mb-1">
-                            Workflow Visualization
-                        </h3>
-                        <p className="text-sm text-gray-400">
-                            Interactive execution flow
-                        </p>
-                    </div>
-                    <ReactFlow
-                        nodes={nodes}
-                        edges={edges}
-                        onNodesChange={onNodesChange}
-                        onEdgesChange={onEdgesChange}
-                        onConnect={onConnect}
-                        fitView
-                        className="rounded-2xl"
-                        style={{ background: "transparent" }}
-                    >
-                        <MiniMap
-                            style={{
-                                background: "rgba(0, 0, 0, 0.8)",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
-                                borderRadius: "8px",
-                            }}
-                            nodeColor="#667eea"
-                            maskColor="rgba(0, 0, 0, 0.2)"
-                        />
-                        <Controls
-                            style={{
-                                background: "rgba(0, 0, 0, 0.8)",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
-                                borderRadius: "8px",
-                            }}
-                        />
-                    </ReactFlow>
+                {/* User Prompt & Actions */}
+                <div className="mb-8">
+                    {userPrompt ? (
+                        <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 flex flex-col">
+                            <h2 className="text-lg font-semibold text-white mb-3">Your Request</h2>
+                            <p className="text-gray-300 italic text-lg mb-4 break-all">"{userPrompt}"</p>
+                            {getActionsCount() > 0 && (
+                                <div>
+                                    <h3 className="text-md font-semibold text-white mb-3">Parsed Actions:</h3>
+                                    <div className="space-y-2">
+                                        {parsedActions.map((action, index) => (
+                                            <div key={index} className="bg-black/20 rounded-lg p-3 text-sm">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-white font-medium break-all">{action?.actionType || 'unknown'}</span>
+                                                    <span className="text-gray-400 break-all">Chain: {action?.targetChainId || 'unknown'}</span>
+                                                </div>
+                                                <div className="text-gray-300 mt-1 break-all">
+                                                    Amount: {action?.amount || '0'} wei → {action?.recipient?.slice(0, 6) || 'unknown'}...
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {getActionsCount() === 0 && (
+                                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                                    <p className="text-yellow-400">No actions parsed. Please go back and submit a prompt.</p>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6 flex flex-col justify-center">
+                            <div className="text-center">
+                                <h2 className="text-xl font-semibold text-blue-400 mb-2">No Request Found</h2>
+                                <p className="text-blue-300 mb-4">Please go back to the home page and submit a prompt first.</p>
+                                <Link 
+                                    href="/" 
+                                    className="inline-flex items-center space-x-2 bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-all duration-300"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    <span>Go Back Home</span>
+                                </Link>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Results Summary */}
                 {executionStatus === "completed" && (
-                    <div className="bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-teal-500/20 backdrop-blur-sm border border-green-500/30 rounded-2xl p-8 mb-8">
-                        <div className="flex items-center space-x-4 mb-6">
-                            <CheckCircle className="w-12 h-12 text-green-400" />
-                            <div>
-                                <h2 className="text-2xl font-bold text-green-400">Execution Successful!</h2>
-                                <p className="text-green-300">Your cross-chain actions have been executed</p>
-                            </div>
-                        </div>
-                        <div className="grid md:grid-cols-3 gap-6 text-sm">
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                <p className="text-gray-400 mb-1">Actions Executed</p>
-                                <p className="text-white font-bold text-2xl">{getActionsCount()}</p>
-                            </div>
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                <p className="text-gray-400 mb-1">Target Chains</p>
-                                <p className="text-white font-bold text-2xl">
-                                    {getTargetChainsCount()}
-                                </p>
-                            </div>
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                <p className="text-gray-400 mb-1">Status</p>
-                                <p className="text-green-400 font-bold text-2xl">Success</p>
+                    <div className="mb-8">
+                        <div className="bg-gradient-to-r from-white/10 via-gray-500/10 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 flex-1 flex flex-col justify-center">
+                                                                <div className="flex items-center space-x-4 mb-6">
+                                        <CheckCircle className="w-12 h-12 text-white" />
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white">Execution Successful!</h2>
+                                            <p className="text-gray-300">Your cross-chain actions have been executed</p>
+                                        </div>
+                                    </div>
+                            <div className="grid md:grid-cols-3 gap-6 text-sm">
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                    <p className="text-gray-400 mb-1">Actions Executed</p>
+                                    <p className="text-white font-bold text-2xl">{getActionsCount()}</p>
+                                </div>
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                    <p className="text-gray-400 mb-1">Target Chains</p>
+                                    <p className="text-white font-bold text-2xl">
+                                        {getTargetChainsCount()}
+                                    </p>
+                                </div>
+                                                                    <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                        <p className="text-gray-400 mb-1">Status</p>
+                                        <p className="text-white font-bold text-2xl">Success</p>
+                                    </div>
                             </div>
                         </div>
                     </div>

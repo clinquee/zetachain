@@ -1,15 +1,15 @@
 const express = require("express");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const OpenAI = require('openai');
+// const OpenAI = require('openai');
 const router = express.Router();
 const dotenv = require("dotenv");
 dotenv.config();
 
 // Initialize AI services
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// const openai = new OpenAI({
+//     apiKey: process.env.OPENAI_API_KEY,
+// });
 
 // Contract addresses from environment variables
 const CONTRACT_ADDRESSES = {
@@ -205,7 +205,7 @@ const getTargetChainId = (prompt) => {
 // Function to call Gemini AI
 const callGeminiAI = async (prompt) => {
     const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.0-flash-exp", // Updated to Gemini 2.5 Pro
         generationConfig: {
             temperature: 0.3,
             topK: 40,
@@ -216,7 +216,7 @@ const callGeminiAI = async (prompt) => {
 
     const fullPrompt = `${SYSTEM_PROMPT}\n\nUser request: "${prompt}"\n\nPARSE THIS REQUEST AND RETURN A VALID JSON ARRAY:`;
     
-    console.log("🤖 Trying Gemini AI...");
+    console.log("🤖 Trying Gemini 2.5 Pro...");
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     return {
@@ -225,7 +225,8 @@ const callGeminiAI = async (prompt) => {
     };
 };
 
-// Function to call OpenAI as backup
+// Function to call OpenAI as backup (COMMENTED OUT)
+/*
 const callOpenAI = async (prompt) => {
     console.log("🤖 Trying OpenAI as backup...");
     
@@ -265,6 +266,7 @@ const callOpenAI = async (prompt) => {
         provider: 'openai'
     };
 };
+*/
 
 // Function to clean and parse AI response
 const cleanAndParseResponse = (jsonResponse, provider) => {
@@ -391,40 +393,26 @@ router.post("/parse", async (req, res) => {
         let aiProvider = 'fallback';
         let aiError = null;
 
-        // Try Gemini first
+        // Try Gemini 2.5 Pro
         try {
-            console.log("🚀 Processing prompt with AI:", prompt);
+            console.log("🚀 Processing prompt with Gemini 2.5 Pro:", prompt);
             
             const geminiResult = await retryWithBackoff(async () => {
                 return await callGeminiAI(prompt);
-            }, 2, 2000); // Reduced retries for faster fallback
+            }, 3, 2000); // Increased retries since no OpenAI fallback
 
             parsedActions = cleanAndParseResponse(geminiResult.text, 'gemini');
             aiProvider = 'gemini';
             
         } catch (geminiError) {
-            console.error("❌ Gemini failed:", geminiError.message);
+            console.error("❌ Gemini 2.5 Pro failed:", geminiError.message);
             aiError = geminiError.message;
             
-            // Try OpenAI as backup
-            try {
-                console.log("🔄 Falling back to OpenAI...");
-                
-                const openaiResult = await retryWithBackoff(async () => {
-                    return await callOpenAI(prompt);
-                }, 2, 1000);
-
-                parsedActions = cleanAndParseResponse(openaiResult.text, 'openai');
-                aiProvider = 'openai';
-                
-            } catch (openaiError) {
-                console.error("❌ OpenAI also failed:", openaiError.message);
-                console.log("🔧 Using fallback action generator...");
-                
-                parsedActions = [generateFallbackAction(prompt)];
-                aiProvider = 'fallback';
-                aiError = `Gemini: ${geminiError.message}, OpenAI: ${openaiError.message}`;
-            }
+            // No OpenAI fallback - go directly to fallback action generator
+            console.log("🔧 Using fallback action generator...");
+            parsedActions = [generateFallbackAction(prompt)];
+            aiProvider = 'fallback';
+            aiError = `Gemini: ${geminiError.message}`;
         }
 
         // Validate that we have valid actions
@@ -476,8 +464,7 @@ router.post("/parse", async (req, res) => {
             contractAddresses: CONTRACT_ADDRESSES,
             zrc20Tokens: ZRC20_TOKENS,
             aiProvider: aiProvider,
-            model: aiProvider === 'gemini' ? 'gemini-1.5-flash' : 
-                   aiProvider === 'openai' ? 'gpt-4o-mini' : 'fallback',
+            model: aiProvider === 'gemini' ? 'gemini-2.0-flash-exp' : 'fallback',
             fallbackUsed: aiProvider === 'fallback',
             aiError: aiProvider === 'fallback' ? aiError : null
         });
@@ -560,9 +547,9 @@ router.get("/examples", (req, res) => {
         examples, 
         contractAddresses: CONTRACT_ADDRESSES,
         zrc20Tokens: ZRC20_TOKENS,
-        supportedProviders: ['gemini', 'openai', 'fallback'],
+        supportedProviders: ['gemini', 'fallback'],
         primaryProvider: 'gemini',
-        backupProvider: 'openai'
+        backupProvider: 'fallback'
     });
 });
 
@@ -570,11 +557,11 @@ router.get("/examples", (req, res) => {
 router.get("/status", async (req, res) => {
     const status = {
         gemini: 'unknown',
-        openai: 'unknown',
+        // openai: 'unknown', // COMMENTED OUT
         timestamp: new Date().toISOString()
     };
 
-    // Test Gemini
+    // Test Gemini 2.5 Pro
     try {
         await callGeminiAI("test");
         status.gemini = 'available';
@@ -583,7 +570,8 @@ router.get("/status", async (req, res) => {
         status.geminiError = error.message;
     }
 
-    // Test OpenAI
+    // Test OpenAI (COMMENTED OUT)
+    /*
     try {
         await callOpenAI("test");
         status.openai = 'available';
@@ -591,6 +579,7 @@ router.get("/status", async (req, res) => {
         status.openai = 'unavailable';
         status.openaiError = error.message;
     }
+    */
 
     res.json(status);
 });

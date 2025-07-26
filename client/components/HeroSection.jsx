@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { ArrowRight, Play, Sparkles, Zap, Globe, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { chatAPI } from "../utils/api";
+import { AnimatedUnderlineTextOne } from "./ui/animated-underline-text-one";
+
 
 export default function HeroSection() {
     const [prompt, setPrompt] = useState("");
@@ -104,25 +106,26 @@ export default function HeroSection() {
     return (
         <div className="relative min-h-screen flex items-center justify-center px-6 lg:px-8 pt-20">
             <div className="relative z-10 max-w-6xl mx-auto text-center">
-                {/* Badge */}
+                {/* Badge
                 <div className="inline-flex items-center space-x-2 text-white/80 mb-8">
                     <Sparkles className="w-4 h-4 text-purple-400" />
                     <span className="text-sm">
                         AI-Powered Cross-Chain Execution
                     </span>
-                </div>
+                </div> */}
 
                 {/* Main Heading */}
                 <h1 className="text-5xl lg:text-8xl font-bold mb-8 leading-tight">
-                    <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                        The Future of
+                    <span className="bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent pr-9">
+                        The Future of 
                     </span>
-                    <br />
-                    <span className="text-white">DeFi is Here</span>
+                    <AnimatedUnderlineTextOne className="text-white">
+                         Defi
+                    </AnimatedUnderlineTextOne>
                 </h1>
 
                 {/* Subtitle */}
-                <p className="text-xl lg:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
+                <p className="text-l lg:text-xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
                     Transform natural language into executable cross-chain
                     actions. From simple transfers to complex DeFi strategies -
                     just describe what you want.
@@ -140,7 +143,7 @@ export default function HeroSection() {
                             disabled={
                                 isLoading || serverStatus === "disconnected"
                             }
-                            className="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg disabled:opacity-50"
+                            className="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white text-lg disabled:opacity-50"
                         />
                         <button
                             type="submit"
@@ -149,7 +152,7 @@ export default function HeroSection() {
                                 !prompt.trim() ||
                                 serverStatus === "disconnected"
                             }
-                            className="absolute right-2 top-2 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white p-3 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="absolute right-2 top-2 bg-gradient-to-r from-gray-600 via-white to-gray-600 text-black p-3 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -175,7 +178,7 @@ export default function HeroSection() {
                             )
                         }
                         disabled={serverStatus === "disconnected"}
-                        className="bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-gradient-to-r from-gray-600 via-white to-gray-600 text-black px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <div className="flex items-center space-x-2">
                             <Zap className="w-5 h-5" />
@@ -193,7 +196,7 @@ export default function HeroSection() {
                     </button>
                 </div>
 
-                {/* Debug Info (remove in production) */}
+                {/* Debug Info (remove in production)
                 {process.env.NODE_ENV === "development" && (
                     <div className="mt-8 text-xs text-gray-500">
                         <p>Prompt: {prompt}</p>
@@ -201,8 +204,12 @@ export default function HeroSection() {
                         <p>Error: {error}</p>
                         <p>Server Status: {serverStatus}</p>
                     </div>
-                )}
+                )} */}
+                            {/* Text Marquee Section */}
+
             </div>
+
+
         </div>
     );
 }
